@@ -138,10 +138,6 @@ sync func update_position(pos):
 	puppet_position = pos
 
 func update_shoot_mode(shoot_mode):
-	if not shoot_mode:
-		sprite.set_region_rect(Rect2(0, 1500, 256, 250))
-	else:
-		sprite.set_region_rect(Rect2(512, 1500, 256, 250))
 	
 	can_shoot = shoot_mode
 
