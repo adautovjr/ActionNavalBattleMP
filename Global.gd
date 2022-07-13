@@ -3,6 +3,8 @@ extends Node
 var player_master = null
 var ui = null
 
+var debug_mode = true
+
 var alive_players = []
 
 func instance_node_at_location(node: Object, parent: Object, location: Vector2) -> Object:

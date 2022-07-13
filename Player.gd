@@ -3,8 +3,12 @@ extends KinematicBody2D
 
 var hp = 100 setget set_hp
 var velocity = Vector2(0, 0)
-const speed = 400
-var angular_speed = 5.0
+var acceleration = 800
+var max_speed = 600
+var angular_speed = 2.0
+var water_friction = 0.01
+var rear_acceleration_modifier = 0.4
+var angular_rotation_against_velocity_modifier = 0.002
 var can_shoot = true
 var is_reloading = false
 
@@ -26,6 +30,7 @@ onready var reload_timer = $Reload_timer
 onready var shoot_point_left = $Shoot_point_left
 onready var shoot_point_right = $Shoot_point_right
 onready var hit_timer = $Hit_timer
+onready var water_splash = $WaterSplash
 
 func _ready():
 	get_tree().connect("network_peer_connected", self, "_network_peer_connected")
@@ -47,13 +52,34 @@ func _process(delta: float) -> void:
 	
 	if get_tree().has_network_peer():
 		if is_network_master() and visible:
-			
+			print(velocity.length())
+			var input_strength = (Input.get_action_strength("up") - Input.get_action_strength("down"))
 			var rotate_direction := Input.get_action_strength("rotate_right") - Input.get_action_strength("rotate_left")
-			rotation += rotate_direction * angular_speed * delta
 			
-			velocity = (Input.get_action_strength("up") - Input.get_action_strength("down")) * transform.y
+			if (velocity != Vector2.ZERO):
+				rotation += rotate_direction * angular_speed * delta * velocity.length() * angular_rotation_against_velocity_modifier
 			
-			move_and_slide(velocity * speed)
+			if (Input.is_action_pressed("up")):
+				velocity += input_strength * transform.y * acceleration * delta
+			elif (Input.is_action_pressed("down")):
+				velocity += input_strength * transform.y * acceleration * delta * rear_acceleration_modifier				
+			
+			velocity.x = clamp(velocity.x, -max_speed, max_speed)
+			velocity.y = clamp(velocity.y, -max_speed, max_speed)
+			
+			if (input_strength == 0):
+				water_splash.emitting = false
+				velocity = lerp(velocity, Vector2.ZERO, water_friction)
+				
+				# velocity deadzone
+				if (abs(velocity.x) <= 0.1):
+					velocity.x = 0
+				if (abs(velocity.y) <= 0.1):
+					velocity.y = 0
+			else:
+				water_splash.emitting = true
+			
+			velocity = move_and_slide(velocity)
 			
 			if Input.is_action_pressed("click") and can_shoot and not is_reloading:
 				rpc("instance_bullet", get_tree().get_network_unique_id(), "left")
@@ -64,7 +90,7 @@ func _process(delta: float) -> void:
 			rotation = lerp_angle(rotation, puppet_rotation, delta * 8)
 			
 			if not tween.is_active():
-				move_and_slide(puppet_velocity * speed)
+				move_and_slide(puppet_velocity * acceleration)
 	
 	if hp <= 0:
 		if username_text_instance != null:
