@@ -33,8 +33,11 @@ one_shot = true
 wait_time = 0.1
 one_shot = true
 
-[node name="Shoot_point" type="Position2D" parent="."]
-position = Vector2( 98, 30 )
+[node name="Shoot_point_left" type="Position2D" parent="."]
+position = Vector2( 15, 0 )
+
+[node name="Shoot_point_right" type="Position2D" parent="."]
+position = Vector2( -15, 0 )
 
 [node name="Hitbox" type="Area2D" parent="."]
 

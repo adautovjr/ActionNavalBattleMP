@@ -1,9 +1,10 @@
 extends KinematicBody2D
 
-const speed = 400
 
 var hp = 100 setget set_hp
 var velocity = Vector2(0, 0)
+const speed = 400
+var angular_speed = 5.0
 var can_shoot = true
 var is_reloading = false
 
@@ -22,7 +23,8 @@ puppet var puppet_username = "" setget puppet_username_set
 onready var tween = $Tween
 onready var sprite = $Sprite
 onready var reload_timer = $Reload_timer
-onready var shoot_point = $Shoot_point
+onready var shoot_point_left = $Shoot_point_left
+onready var shoot_point_right = $Shoot_point_right
 onready var hit_timer = $Hit_timer
 
 func _ready():
@@ -45,17 +47,17 @@ func _process(delta: float) -> void:
 	
 	if get_tree().has_network_peer():
 		if is_network_master() and visible:
-			var x_input = int(Input.is_action_pressed("right")) - int(Input.is_action_pressed("left"))
-			var y_input = int(Input.is_action_pressed("down")) - int(Input.is_action_pressed("up"))
 			
-			velocity = Vector2(x_input, y_input).normalized()
+			var rotate_direction := Input.get_action_strength("rotate_right") - Input.get_action_strength("rotate_left")
+			rotation += rotate_direction * angular_speed * delta
+			
+			velocity = (Input.get_action_strength("up") - Input.get_action_strength("down")) * transform.y
 			
 			move_and_slide(velocity * speed)
 			
-			look_at(get_global_mouse_position())
-			
 			if Input.is_action_pressed("click") and can_shoot and not is_reloading:
-				rpc("instance_bullet", get_tree().get_network_unique_id())
+				rpc("instance_bullet", get_tree().get_network_unique_id(), "left")
+				rpc("instance_bullet", get_tree().get_network_unique_id(), "right")
 				is_reloading = true
 				reload_timer.start()
 		else:
@@ -125,8 +127,8 @@ func _on_Network_tick_rate_timeout():
 			rset_unreliable("puppet_velocity", velocity)
 			rset_unreliable("puppet_rotation", rotation)
 
-sync func instance_bullet(id):
-	var player_bullet_instance = Global.instance_node_at_location(player_bullet, Persistent_nodes, shoot_point.global_position)
+sync func instance_bullet(id, side = "left"):
+	var player_bullet_instance = Global.instance_node_at_location(player_bullet, Persistent_nodes, shoot_point_left if side == "left" else shoot_point_right)
 	player_bullet_instance.name = "Bullet" + name + str(Network.networked_object_name_index)
 	player_bullet_instance.set_network_master(id)
 	player_bullet_instance.player_rotation = rotation
