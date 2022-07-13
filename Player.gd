@@ -128,10 +128,11 @@ func _on_Network_tick_rate_timeout():
 			rset_unreliable("puppet_rotation", rotation)
 
 sync func instance_bullet(id, side = "left"):
-	var player_bullet_instance = Global.instance_node_at_location(player_bullet, Persistent_nodes, shoot_point_left if side == "left" else shoot_point_right)
+	var isLeftSide = side == "left"
+	var player_bullet_instance = Global.instance_node_at_location(player_bullet, Persistent_nodes, shoot_point_left.global_position if isLeftSide else shoot_point_right.global_position)
 	player_bullet_instance.name = "Bullet" + name + str(Network.networked_object_name_index)
 	player_bullet_instance.set_network_master(id)
-	player_bullet_instance.player_rotation = rotation
+	player_bullet_instance.player_rotation = rotation if isLeftSide else (rotation + 3.14159)
 	player_bullet_instance.player_owner = id
 	Network.networked_object_name_index += 1
 
@@ -163,7 +164,7 @@ sync func hit_by_damager(damage):
 
 sync func enable() -> void:
 	hp = 100
-	can_shoot = false
+	can_shoot = true
 	update_shoot_mode(false)
 	username_text_instance.visible = true
 	visible = true

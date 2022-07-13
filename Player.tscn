@@ -4,14 +4,14 @@
 [ext_resource path="res://spritesheet.png" type="Texture" id=2]
 
 [sub_resource type="CapsuleShape2D" id=1]
-radius = 14.0
-height = 50.0
+radius = 56.0
+height = 200.0
 
 [node name="Player" type="KinematicBody2D" groups=["Net", "Player"]]
 script = ExtResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
-scale = Vector2( 0.75, 0.75 )
+scale = Vector2( 3, 3 )
 texture = ExtResource( 2 )
 region_enabled = true
 region_rect = Rect2( 407, 0, 68, 114 )
@@ -34,10 +34,10 @@ wait_time = 0.1
 one_shot = true
 
 [node name="Shoot_point_left" type="Position2D" parent="."]
-position = Vector2( 15, 0 )
+position = Vector2( 58, 0 )
 
 [node name="Shoot_point_right" type="Position2D" parent="."]
-position = Vector2( -15, 0 )
+position = Vector2( -58, 0 )
 
 [node name="Hitbox" type="Area2D" parent="."]
 
